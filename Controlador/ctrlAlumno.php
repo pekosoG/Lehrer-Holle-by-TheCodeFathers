@@ -89,6 +89,8 @@ include 'Controlador/ctrlEstandar.php';
 
 		public function validacion_alta(){
 			if(!empty($_POST)){
+				require("Controlador/validaciones.php");
+				$validacion = new validaciones();
 				$query;
 
 				$this->array_validacion = [
@@ -99,7 +101,7 @@ include 'Controlador/ctrlEstandar.php';
 					"status" => ["",false],
 					"celular" => ["",false],
 					"github" => ["",false],
-					"url" => ["",false],
+					"sitio" => ["",false],
 					"equipo" => ["",false],
 					"carrera_id" => ["",false],
 				];
@@ -107,28 +109,16 @@ include 'Controlador/ctrlEstandar.php';
 				foreach ($_POST as $key => $value) {
 					switch ($key) {
 						case 'nombre':
-							$pattern = '/^[a-zA-Z].{0,49}$/';
-							
-							if(preg_match($pattern, $_POST['nombre'])==1){
-								$this->array_validacion['nombre'][0]="'". $_POST['nombre'] ."'";
-								$this->array_validacion['nombre'][1]=true;
-							}
-							else{
-								//cargar vista
-								echo 'Nombre inválido.';
+							if(!$validacion->validar('nombre',$_POST['nombre'],$this->array_validacion)){
+								//vista
+								echo 'Nombre invalido.';
 								return false;
 							}
 
 						break;
 
 						case 'mail': 
-							$pattern ='/^[\w-]+(\.[\w-]+)*@[A-Za-z0-9]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$/';
-
-							if(preg_match($pattern, $_POST['mail'])==1){
-								$this->array_validacion['mail'][0]="'". $_POST['mail'] ."'";
-								$this->array_validacion['mail'][1]=true;
-							}
-							else{
+							if(!$validacion->validar('mail',$_POST['mail'],$this->array_validacion)){
 								//cargar vista
 								echo 'Correo inválido.';
 								return false;
@@ -137,9 +127,7 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 						case 'codigo':
-							$pattern = '/^[a-zA-Z]?[0-9]{1,9}$/';
-
-							if(preg_match($pattern, $_POST['codigo'])==1){
+							if($validacion->validar('codigo',$_POST['codigo'])){
 								$resultado = $this->mdl->consulta_usuario($_POST['codigo']);
 								$array_usuario = array();
 								if(!$array_usuario = $resultado->fetch_array(MYSQL_ASSOC)){
@@ -162,9 +150,8 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 						case 'carrera_id':
-							$pattern = '/^[0-9]+$/';
 
-							if(preg_match($pattern, $_POST['carrera_id'])==1){
+							if($validacion->validar('carrera_id',$_POST['carrera_id'])){
 								$query = "SELECT * FROM carrera WHERE id=" . $_POST['carrera_id'];
 								$resultado = $this->mdl->db_driver->query($query);
 								$array_carrera = array();
@@ -185,14 +172,8 @@ include 'Controlador/ctrlEstandar.php';
 							
 						break;
 
-						case 'url':
-							$pattern = '/^((http:\/\/)|(www\.)|(http:\/\/www\.))[a-zA-Z0-9]{1,30}\.[a-zA-Z0-9]{1,10}$/';
-
-							if(preg_match($pattern, $_POST['url'])==1){
-								$this->array_validacion['url'][0]="'". $_POST['url'] ."'";
-								$this->array_validacion['url'][1]=true;
-							}
-							else{
+						case 'sitio':
+							if(!$validacion->validar('sitio',$_POST['sitio'],$this->array_validacion)){
 								echo 'URL inválida.';
 								return false;
 							}
@@ -200,13 +181,7 @@ include 'Controlador/ctrlEstandar.php';
 							break;
 
 						case 'github':
-							$pattern = '/^((http:\/\/)|(www\.)|(http:\/\/www\.))github\.com\/(a-zA-Z){1,20}$/';
-
-							if(preg_match($pattern, $_POST['github'])==1){
-								$this->array_validacion['github'][0]="'". $_POST['github'] ."'";
-								$this->array_validacion['github'][1]=true;
-							}
-							else{
+							if(!$validacion->validar('github',$_POST['github'],$this->array_validacion)){
 								echo 'Github inválida.';
 								return false;
 							}
@@ -214,13 +189,7 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 						case 'celular':
-							$pattern = '/^[0-9][0-9]{10,12}/';
-
-							if(preg_match($pattern, $_POST['celular'])==1){
-								$this->array_validacion['celular'][0]="'". $_POST['celular'] ."'";
-								$this->array_validacion['celular'][1]=true;
-							}
-							else{
+							if(!$validacion->validar('celular',$_POST['celular'],$this->array_validacion)){
 								echo 'Celular inválido.';
 								return false;
 							}
@@ -228,13 +197,7 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 						case 'equipo':
-							$pattern = '/^[a-zA-Z].{0,30}$/';
-
-							if(preg_match($pattern, $_POST['equipo'])==1){
-								$this->array_validacion['equipo'][0]="'". $_POST['equipo'] ."'";
-								$this->array_validacion['equipo'][1]=true;
-							}
-							else{
+							if(!$validacion->validar('equipo',$_POST['equipo'],$this->array_validacion)){
 								echo 'Equipo inválida.';
 								return false;
 							}
@@ -242,15 +205,18 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 						case 'password':
-							$pattern = '/^\w{5,15}$/';
-
-							if(preg_match($pattern, $_POST['password'])==0){
+							if(!$validacion->validar('password',$_POST['password'])){
 								echo 'Contraseña inválida.';
 								return false;
 							}
 
 						break;
 					}
+				}
+
+				if(!isset($_POST['password'])){
+					echo 'falta la password';
+					return false;
 				}
 
 				$this->array_validacion['status'][0]=1;
@@ -283,6 +249,8 @@ include 'Controlador/ctrlEstandar.php';
 				//Cargar vista
 				echo 'No hay valores en POST.';
 			}
+
+			return false;
 		}
 
 		public function validacion_baja(){
@@ -340,13 +308,15 @@ include 'Controlador/ctrlEstandar.php';
 
 		public function validar_modificacion(){
 			if(!empty($_POST)){
+				require("Controlador/validaciones.php");
+				$validacion = new validaciones();
+				
 				$this->array_validacion = [
 					"nombre" => ["",false],
 					"mail" => ["",false],
-					"status" => ["",false],
 					"celular" => ["",false],
 					"github" => ["",false],
-					"url" => ["",false],
+					"sitio" => ["",false],
 					"equipo" => ["",false],
 					"carrera" => ["",false],
 				];
@@ -382,44 +352,25 @@ include 'Controlador/ctrlEstandar.php';
 				foreach ($_POST as $key => $value){
 					switch ($key) {
 						case 'nombre':
-							$pattern = '/^[a-zA-Z].{0,49}$/';
-							
-							if(preg_match($pattern, $_POST['nombre'])==1){
-								$this->array_validacion['nombre'][0]="'". $_POST['nombre'] ."'";
-								$this->array_validacion['nombre'][1]=true;
-							}
-							else{
-								//cargar vista
-								echo 'Nombre inválido.';
+							if(!$validacion->validar('nombre',$_POST['nombre'],$this->array_validacion)){
+								echo 'nombre invalido';
 								return false;
 							}
-
 						break;
 
-						case 'correo': 
-							$pattern ='/^[\w-]+(\.[\w-]+)*@[A-Za-z0-9]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$/';
-
-							if(preg_match($pattern, $_POST['correo'])==1){
-								$this->array_validacion['mail'][0]="'". $_POST['correo'] ."'";
-								$this->array_validacion['mail'][1]=true;
-							}
-							else{
+						case 'mail': 
+							if(!$validacion->validar('mail',$_POST['mail'],$this->array_validacion)){
 								//cargar vista
 								echo 'Correo inválido.';
 								return false;
 							}
-							;
 
 						break;
 
-						case 'carrera':
+						case 'carrera_id':
 							$pattern = '/^[A-Z]{3,5}$/';
 
-							if(preg_match($pattern, $_POST['carrera'])==1){
-								$this->array_validacion['carrera'][0]=0;
-								$this->array_validacion['carrera'][1]=true;
-							}
-							else{
+							if(!$validacion->validar('carrera_id',$_POST['carrera_id'])){
 								//cargar vista
 								echo 'Carrera inválido.';
 								return false;
@@ -427,14 +378,8 @@ include 'Controlador/ctrlEstandar.php';
 							
 						break;
 
-						case 'url':
-							$pattern = '/^((http:\/\/)|(www\.)|(http:\/\/www\.))[a-zA-Z0-9]{1,30}\.[a-zA-Z0-9]{1,10}$/';
-
-							if(preg_match($pattern, $_POST['url'])==1){
-								$this->array_validacion['url'][0]="'". $_POST['url'] ."'";
-								$this->array_validacion['url'][1]=true;
-							}
-							else{
+						case 'sitio':
+							if(!$validacion->validar('sitio',$_POST['sitio'],$this->array_validacion)){
 								echo 'URL inválida.';
 								return false;
 								//vista
@@ -443,13 +388,7 @@ include 'Controlador/ctrlEstandar.php';
 							break;
 
 						case 'github':
-							$pattern = '/^((http:\/\/)|(www\.)|(http:\/\/www\.))github\.com\/[a-zA-Z]{1,20}$/';
-
-							if(preg_match($pattern, $_POST['github'])==1){
-								$this->array_validacion['github'][0]="'". $_POST['github'] ."'";
-								$this->array_validacion['github'][1]=true;
-							}
-							else{
+							if(!$validacion->validar('github',$_POST['github'],$this->array_validacion)){
 								echo 'Github invalido';
 								return false;
 							}
@@ -457,13 +396,7 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 						case 'celular':
-							$pattern = '/^[0-9]{10,12}$/';
-
-							if(preg_match($pattern, $_POST['celular'])==1){
-								$this->array_validacion['celular'][0]="'". $_POST['celular'] ."'";
-								$this->array_validacion['celular'][1]=true;
-							}
-							else{
+							if(!$validacion->validar('celular',$_POST['celular'],$this->array_validacion)){
 								echo 'celular invalido';
 								return false;
 							}
@@ -471,17 +404,15 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 						case 'equipo':
-							$pattern = '/^[a-zA-Z].{0,29}$/';
-
-							if(preg_match($pattern, $_POST['equipo'])==1){
-								$this->array_validacion['equipo'][0]="'". $_POST['equipo'] ."'";
-								$this->array_validacion['equipo'][1]=true;
+							if(!$validacion->validar('equipo',$_POST['equipo'],$this->array_validacion)){
+								echo 'equipo invalido';
+								return false;
 							}
 
 						break;
 					}
 				}
-
+				
 				return true;
 			}
 			else{

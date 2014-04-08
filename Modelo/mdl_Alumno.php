@@ -70,11 +70,11 @@
 						$query .= ", ";
 
 					$query .= $key . "=" . $value[0];
+					$cont++;
 				}
-				$cont++;
 			}
 			$query .= " WHERE id=" . $_POST['id'];
-			
+	
 			if(!$this->db_driver->query($query)){
 				return false;
 			}
