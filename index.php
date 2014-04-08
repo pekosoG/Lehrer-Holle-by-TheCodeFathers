@@ -8,6 +8,10 @@
 	//$cont=$_GET;
 	//$_GET=null;
 	//$contPost=$_POST;
+	if(session_start()==NULL){
+			session_start();
+		}
+
 	$cont=$_POST;
 	 if(isset($cont['ctrl'])){
 		
@@ -32,6 +36,26 @@
 			case 'ciclo':
 				require('controlador\CtrlCiclo.php');
 				$controlador= new CtrlCiclo();
+			case 'alumno':
+				require("Controlador/ctrlAlumno.php");
+				$controlador = new ctrlAlumno();
+				break;
+
+			case 'curso':
+				require("Controlador/ctrlCurso.php");
+				$controlador = new ctrlCurso();
+				break;
+
+			case 'login':
+				require("Controlador/ctrlLogin.php");
+				$controlador = new ctrlLogin();
+				break;
+
+			case 'calificacion':
+				require("Controlador/ctrlCalificaciones.php");
+				$controlador = new ctrlCalificaciones();
+				break;
+
 			default:
 				//Controlador Default, un 404 quiza?
 				die("404...  parametro mal!");
