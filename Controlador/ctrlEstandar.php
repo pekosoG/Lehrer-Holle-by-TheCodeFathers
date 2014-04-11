@@ -63,7 +63,6 @@ header( 'Content-Type: text/html;charset=utf-8' );
 				return false;
 			}
 			$mdl->db_driver->close();
-			var_dump($_SESSION);
 			return true;
 		}
 

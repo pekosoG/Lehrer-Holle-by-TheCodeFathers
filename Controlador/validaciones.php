@@ -1,5 +1,12 @@
 <?php
 	class validaciones{
+		public $db_driver;
+
+
+		function __construct(){
+			require_once("DataBase.php");
+			$this->db_driver = DataBase::singleton()->db_driver;
+		}
 
 		public function validar($tipo, $cadena, &$array = NULL){
 			$pattern = '';
@@ -39,6 +46,30 @@
 				case 'password':
 					$pattern = '/^\w{5,15}$/';
 					break;
+
+				case 'ciclo_id':
+					$pattern = '/^[a-zA-Z0-9]{1,6}$/';
+					break;
+
+				case 'usuario_id':
+					$pattern = '/^[0-9]+$/';
+					break;
+
+				case 'materia_clave':
+					$pattern = '/^[a-zA-Z0-9]+$/';
+					break;
+
+				case 'nrc':
+					$pattern = '/^[0-9]{5,5}$/';
+					break;
+
+				case 'porcentaje':
+					$pattern = '/^0?\.[0-9]+$/';
+					break;
+
+				case 'extra':
+					$pattern = '/^(0|1)$/';
+					break;
 			}
 
 			if(func_num_args()==3){
@@ -51,8 +82,8 @@
 						case 'github':
 						case 'sitio':
 						case 'equipo':
-							$array[$tipo][0]="'". $cadena ."'";
-							$array[$tipo][1]=true;
+							$array[$tipo][0] = '\'' . $cadena . '\'';
+							$array[$tipo][1] = true;
 							break;
 
 						default:

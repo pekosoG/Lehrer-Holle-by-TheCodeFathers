@@ -19,8 +19,8 @@ include 'Controlador/ctrlEstandar.php';
 
 									if(self::validar_alta()){
 										//var_dump($this->array_validacion);
-										if($this->mdl->alta($this->array_validacion, $this->array_clasesdias)){
-
+										if($this->mdl->alta($this->array_validacion, $this->array_clasesdias, $this->array_rubros)){
+											echo 'se dio de alta';
 										}	
 									}
 								}
@@ -93,6 +93,7 @@ include 'Controlador/ctrlEstandar.php';
 				"materia_clave" => ["",false],
 				"ciclo_id" => ["",false],
 				"usuario_id" => ["",false],
+				"seccion" => ["",false],
 			];
 
 			$this->array_clasesdias = [
@@ -105,17 +106,14 @@ include 'Controlador/ctrlEstandar.php';
 			];
 
 			$ban_dias=0;
+			require("Controlador/validaciones.php");
+			$aux = new validaciones();
 
 			foreach ($_POST as $key => $value) {
 				switch ($key) {
 					case 'nombre':
-						$pattern = '/^[a-zA-Z].{0,49}$/';
 
-						if(preg_match($pattern, $_POST['nombre'])==1){
-							$this->array_validacion['nombre'][0]="'" . $_POST['nombre'] . "'";
-							$this->array_validacion['nombre'][1]=true;
-						}
-						else{
+						if(!$aux->validar('nombre', $_POST['nombre'], $this->array_validacion)){
 							echo 'Nombre inválido.';
 							return false;
 						}
@@ -123,29 +121,15 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 					case 'nrc':
-						$pattern = '/^[0-9]{5,5}$/';
 
-						if(preg_match($pattern, $_POST['nrc'])==1){
-							$query = 'SELECT * FROM curso WHERE nrc='. $_POST['nrc'];
-							$resultado = $this->mdl->db_driver->query($query);
-							$array_usuario = array();
-							if(!$array_usuario = $resultado->fetch_array(MYSQL_ASSOC)){
+						if($aux->validar('nrc', $_POST['nrc'])){
+
+							if(!$this->mdl->existe('nrc', $_POST['nrc'])){
 								$this->array_validacion['nrc'][0] = '\'' . $_POST['nrc'] . '\'';
 								$this->array_validacion['nrc'][1] =true;
 
-								$query = 'SELECT * FROM curso ORDER BY id ASC';
-								$resultado = $this->mdl->db_driver->query($query);
-								$array_temp = array();
-								$cont=0;
-								if(!$array_temp = $resultado->fetch_array(MYSQL_ASSOC)){
-									$this->array_validacion['id'][0] = $cont;
-									$this->array_validacion['id'][1] = true;
-								}
-								else{
-									while($array_temp = $resultado->fetch_array(MYSQL_ASSOC)){ $cont++; }
-									$this->array_validacion['id'][0] = $cont+1;
-									$this->array_validacion['id'][1] = true;
-								}
+								$this->array_validacion['id'][0] = $this->mdl->nextID('curso');
+								$this->array_validacion['id'][1] = true;
 							}
 							else{
 								echo 'NRC ocupado.';
@@ -160,13 +144,10 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 					case 'materia_clave':
-						$pattern = '/^[a-zA-Z0-9]+$/';
 
-						if(preg_match($pattern, $_POST['materia_clave'])==1){
-							$query = "SELECT * FROM materia WHERE clave='". $_POST['materia_clave'] . '\'';
-							$resultado = $this->mdl->db_driver->query($query);
-							$array_usuario = array();
-							if(!$array_usuario = $resultado->fetch_array(MYSQL_ASSOC)){
+						if($aux->validar('materia_clave', $_POST['materia_clave'])){
+							
+							if(!$this->mdl->existe('materia_clave', $_POST['materia_clave'])){
 								echo 'La materia no existe.';
 								return false;
 							}
@@ -183,13 +164,9 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 						
 					case 'ciclo_id':
-						$pattern = '/^[a-zA-Z0-9]{1,6}$/';
+						if($aux->validar('ciclo_id', $_POST['ciclo_id'])){
 
-						if(preg_match($pattern, $_POST['ciclo_id'])==1){
-							$query = 'SELECT * FROM ciclo WHERE id=\''. $_POST['ciclo_id'] . '\'';
-							$resultado = $this->mdl->db_driver->query($query);
-							$array_usuario = array();
-							if(!$array_usuario = $resultado->fetch_array(MYSQL_ASSOC)){
+							if(!$this->mdl->existe('ciclo_id', $_POST['ciclo_id'])){
 								echo 'EL ciclo no existe.';
 								return false;
 							}
@@ -206,19 +183,14 @@ include 'Controlador/ctrlEstandar.php';
 						break;
 
 					case 'usuario_id':
-						$pattern = '/^[0-9]+$/';
-
-						if(preg_match($pattern, $_POST['usuario_id'])==1){
-							$query = "SELECT * FROM cuentas WHERE id=". $_POST['usuario_id'];
-							$resultado = $this->mdl->db_driver->query($query);
-							$array_usuario = array();
-							if(!$array_usuario = $resultado->fetch_array(MYSQL_ASSOC)){
-								echo 'ID no existe.';
+						if($aux->validar('usuario_id', $_POST['usuario_id'])){
+							if(!$this->mdl->existe('usuario_id', $_POST['usuario_id'])){
+								echo 'ID usuario no existe.';
 								//vista
 								return false;
 							}
 							else{
-								if($array_usuario['tipo']==1){
+								if(strcmp($_SESSION['type'], 'professor')==0){
 									$this->array_validacion['usuario_id'][0]=$_POST['usuario_id'];
 									$this->array_validacion['usuario_id'][1]=true;
 								}
@@ -244,8 +216,8 @@ include 'Controlador/ctrlEstandar.php';
 						$pattern = '/^[0-9]{4,4}-[0-9]{4,4}$/';
 
 						if(preg_match($pattern, $_POST[$key])==1){
-							$this->array_clasesdias[$key][0]=$_POST[$key];
-							$this->array_clasesdias[$key][1]=true;
+							$this->array_clasesdias[$key][0] = $_POST[$key];
+							$this->array_clasesdias[$key][1] = true;
 							$ban_dias=1;
 						}
 						else{
@@ -256,40 +228,145 @@ include 'Controlador/ctrlEstandar.php';
 
 						break;
 					default:
-
-						$array = [
-						"nombre" => ["",false],
-						"porcentaje" => ["",false],
-						"extra" => ["",false],
-					];
-				array_push($this->array_rubros, $array);
-				
 						$pattern = '/^(rubro)[0-9]+_(nombre)$/';
-						
 
-						if(preg_match($pattern, $_POST[$key])==1){
+						if(preg_match($pattern, $key)==1){
 
+							$llave = explode('_', $key);
+
+							$ban = 0;
 							
-							
+							for($i=0;$i<sizeof($this->array_rubros);$i++){
+								foreach ($this->array_rubros[$i] as $llave_array => $value_array) {
+									if(strcmp($llave_array, $llave[0])==0){
+										$this->array_rubros[$i][$llave_array]['nombre'][0] = $_POST[$key];
+										$this->array_rubros[$i][$llave_array]['nombre'][1] = true;
+										$ban=1;
+										break;
+									}
+								}
+							}
+
+							if($ban==0){
+								$array = [
+									"$llave[0]" => [ 
+											"nombre" => [$_POST[$key],true],
+											"porcentaje" => ["",false],
+											"extra" => ["",false],
+										],
+								];
+
+								array_push($this->array_rubros, $array);
+							}
 						}
 						else{
 							$pattern = '/^(rubro)[0-9]+_(porcentaje)$/';
 
-							if(preg_match($pattern, $_POST[$key])==1){
+							if(preg_match($pattern, $key)==1){
+								$llave = explode('_', $key);
 
+								$ban = 0;
 								
+								for($i=0;$i<sizeof($this->array_rubros);$i++){
+									foreach ($this->array_rubros[$i] as $llave_array => $value_array) {
+										if(strcmp($llave_array, $llave[0])==0){
+											$this->array_rubros[$i][$llave_array]['porcentaje'][0] = $_POST[$key];
+											$this->array_rubros[$i][$llave_array]['porcentaje'][1] = true;
+											$ban=1;
+											break;
+										}
+									}
+								}
+
+								if($ban==0){
+									$array = [
+										"$llave[0]" => [ 
+												"nombre" => ["",false],
+												"porcentaje" => [$_POST[$key],true],
+												"extra" => ["",false],
+											],
+									];
+
+									array_push($this->array_rubros, $array);
+								}
 							}
 							else{
 								$pattern = '/^(rubro)[0-9]+_(extra)$/';
 
+								if(preg_match($pattern, $key)==1){
+									$llave = explode('_', $key);
+
+									$ban = 0;
+									
+									for($i=0;$i<sizeof($this->array_rubros);$i++){
+										foreach ($this->array_rubros[$i] as $llave_array => $value_array) {
+											if(strcmp($llave_array, $llave[0])==0){
+												$this->array_rubros[$i][$llave_array]['extra'][0] = $_POST[$key];
+												$this->array_rubros[$i][$llave_array]['extra'][1] = true;
+												$ban=1;
+												break;
+											}
+										}
+									}
+
+									if($ban==0){
+										$array = [
+											"$llave[0]" => [ 
+													"nombre" => ["",false],
+													"porcentaje" => ["",false],
+													"extra" => [$_POST[$key],true],
+												],
+										];
+
+										array_push($this->array_rubros, $array);
+									}
+								}
 							}
 						}
+
 						break;
 				}
 			}
 
+			if(!empty($_POST['materia_clave']) && !empty($_POST['seccion'])){
+				if(!$this->mdl->existe('seccion', $_POST['materia_clave'], $_POST['seccion'])){
+					
+					$this->array_validacion['seccion'][0] = $_POST['seccion'];
+					$this->array_validacion['seccion'][1] = true;
+				}
+				else{
+					echo 'seccion ocupada';
+					return false;
+				}
+
+			}
+
+			if(!empty($this->array_rubros)){
+				for($i=0;$i<sizeof($this->array_rubros);$i++){
+					foreach ($this->array_rubros[$i] as $llave_array => $value_array) {	
+						foreach ($value_array as $key => $value) {
+							if(!$value[1]){
+								echo 'faltan parametros en ' . $llave_array;
+								return false;
+							}
+							else{
+								//echo $key . $value[0];
+								if(!$aux->validar($key,$value[0])){
+									echo 'El formato de ' . $key . ' en ' . $llave_array;
+									return false;
+								}
+							}
+						}
+					}
+				}
+			}
+			else{
+				echo 'Necesita rubros de evaluacion';
+				return false;
+			}
+
 			if($this->array_validacion['nrc'][1] && $this->array_validacion['nombre'][1] && $this->array_validacion['materia_clave'][1] &&
-				$this->array_validacion['ciclo_id'][1] && $this->array_validacion['usuario_id'][1]){
+				$this->array_validacion['ciclo_id'][1] && $this->array_validacion['usuario_id'][1] && $this->array_validacion['seccion'][1]){
 				if($ban_dias==1)
 					return true;
 				else{
@@ -307,23 +384,21 @@ include 'Controlador/ctrlEstandar.php';
 
 			if(!empty($_POST)){
 				
-				if(isset($_POST['id_nrc']) && isset($_POST['usuario_id'])){
+				if(!empty($_POST['nrc']) && !empty($_POST['usuario_id'])){
 
-					$query = 'SELECT * FROM curso WHERE id=' . $_POST['id_nrc'];
-					$resultado = $this->mdl->db_driver->query($query);
-					$array_curso = array();
-					if($array_curso = $resultado->fetch_array(MYSQL_ASSOC)){
-						$query = "SELECT * FROM cuentas WHERE id=" . $_POST['usuario_id'];
-						$resultado = $this->mdl->db_driver->query($query);
-						$array_usuario = array();
-						if($array_usuario = $resultado->fetch_array(MYSQL_ASSOC)){
-							if($array_usuario['tipo']==2){
-								$resultado = $this->mdl->consulta_CursoAlumno($array_curso['id'], $array_usuario['id']);
-								$array_temp = array();
+					if($this->mdl->existe('nrc', $_POST['nrc'])){
+						
+						if($this->mdl->existe('usuario_id', $_POST['usuario_id'])){
 
-								if(!$array_temp = $resultado->fetch_array(MYSQL_ASSOC)){
+							$array_temp = $this->mdl->consulta_Alumno($_POST['usuario_id']);
+
+							if($array_temp['tipo']==2){
+
+								$array_curso = $this->mdl->consulta_cursoID($_POST['nrc']);
+
+								if($this->mdl->consulta_CursoAlumno($_POST['usuario_id'], $array_curso['id'])){
 									
-									if($this->mdl->matricular($array_curso['id'], $array_usuario['id'])){
+									if($this->mdl->matricular($array_curso['id'], $_POST['usuario_id'])){
 										echo 'Se amtriculo el alumno';
 										return true;
 									}
@@ -356,44 +431,34 @@ include 'Controlador/ctrlEstandar.php';
 
 		public function validar_desmatricular(){
 
-			if(!empty($_POST)){
-				
-				if(isset($_POST['id_nrc']) && isset($_POST['usuario_id'])){
+			if(!empty($_POST['nrc']) && !empty($_POST['usuario_id'])){
 
-					$query = 'SELECT * FROM curso WHERE id=' . $_POST['id_nrc'];
-					$resultado = $this->mdl->db_driver->query($query);
-					$array_curso = array();
-					if($array_curso = $resultado->fetch_array(MYSQL_ASSOC)){
-						$query = 'SELECT * FROM cuentas WHERE id=' . $_POST['usuario_id'];
-						$resultado = $this->mdl->db_driver->query($query);
-						$array_usuario = array();
-						if($array_usuario = $resultado->fetch_array(MYSQL_ASSOC)){
+				if($this->mdl->existe('nrc', $_POST['nrc'])){
+						
+					if($this->mdl->existe('usuario_id', $_POST['usuario_id'])){
 							
-							$resultado = $this->mdl->consulta_CursoAlumno($array_curso['id'], $array_usuario['id']);
-							$array_temp = array();
+						$array_curso = $this->mdl->consulta_cursoID($_POST['nrc']);
 
-							if($array_temp = $resultado->fetch_array(MYSQL_ASSOC)){
-								if($this->mdl->desmatricular($array_curso['id'], $array_usuario['id'])){
-									return true;
-								}
-								else
-									echo 'No se pudo desmatricular';
+						if(!$this->mdl->consulta_CursoAlumno($_POST['usuario_id'], $array_curso['id'])){
+
+							if($this->mdl->desmatricular($array_curso['id'], $_POST['usuario_id'])){
+								return true;
 							}
 							else
-								echo 'El usuario no está matriculado en este curso.';
+								echo 'No se pudo desmatricular';
 						}
 						else
-							echo 'El usuario no existe.';
+							echo 'El usuario no está matriculado en este curso.';
 					}
 					else
-						echo 'El nrc no existe';
-
+						echo 'El usuario no existe.';
 				}
 				else
-					echo 'Faltan valores.';
+					echo 'El nrc no existe';
+
 			}
 			else
-				echo 'No hay vaores psot';
+				echo 'Faltan valores.';
 
 
 			return false;
