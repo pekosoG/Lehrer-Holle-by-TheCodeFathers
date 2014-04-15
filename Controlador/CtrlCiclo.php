@@ -6,11 +6,12 @@
  * @author PekosoG
  * @version 0.5
  */
-class CtrlCiclo implements Controlador{
+class CtrlCiclo extends ctrlEstandar{
 	private $modelo;
 	private $cont;
 	
 	function __construct(){
+		parent::__construct();
 		require('Modelo\ModCiclo.php');
 		$this->modelo= new ModCiclo();
 		$this->cont=func_get_arg(0);
@@ -23,7 +24,8 @@ class CtrlCiclo implements Controlador{
 			case 'alta':
 				$this->nuevoCiclo();
 				break;
-			
+			case 'consulta':
+				break;
 			default:
 				
 				break;
@@ -38,6 +40,26 @@ class CtrlCiclo implements Controlador{
 		 * inicio y la fecha final... junto con los datos de los dias 
 		 * festivos...  supongo.
 		 */
+		 if(parent::isProfessor()){
+		 	if(isset($this->cont['nomCiclo']))
+				if(isset($this->cont['fIni']))
+					if(isset($this->cont['fFin'])){
+						$inicio=new DateTime($this->cont['fIni']);
+						$fin=new DateTime($this->cont['fFin']);
+						
+						if($fin>$inicio){
+							$res=$this->modelo->insertaCiclo($array);
+							
+							var_dump($res);
+						}
+					}						
+		 }
+	}
+	
+	function consultaCiclo(){
+		if(parent::isLogged()){
+			
+		}
 	}
 }
 ?>

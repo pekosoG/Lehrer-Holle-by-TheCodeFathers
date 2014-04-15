@@ -7,7 +7,7 @@ require_once("controladores/CtrlInterfaz.php");
  * @author PekosoG
  * @version 0.5
  */
-class CtrlProfesor implements CtrlInterfaz{ //funcionará asi como en Java o es diferente el bussines?
+class CtrlProfesor extends ctrlEstandar{
 	private $modelo;
 	private $cont;
 	/**
@@ -15,6 +15,7 @@ class CtrlProfesor implements CtrlInterfaz{ //funcionará asi como en Java o es 
 	 * @version 1.0
 	 */
 	function __construct(){
+		parent::__construct();
 		require("modelos\ModProfesor.php");
 		$this->modelo= new ModProfesor();
 		$this->cont=func_get_arg(0);
@@ -46,7 +47,8 @@ class CtrlProfesor implements CtrlInterfaz{ //funcionará asi como en Java o es 
 	}
 	
 	function nuevoCurso(){
-		//Supongo que aqui tiene que mostrarse la vista para que se pueda generar el curso		
+		//Supongo que aqui tiene que mostrarse la vista para que se pueda generar el curso
+				
 	}
 	
 	function clonarCurso(){
@@ -55,6 +57,7 @@ class CtrlProfesor implements CtrlInterfaz{ //funcionará asi como en Java o es 
 	
 	function generaReglasEV(){
 		//Aqui tambien....
+		
 	}
 	
 	function altaAlumnos(){
